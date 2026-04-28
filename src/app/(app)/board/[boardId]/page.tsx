@@ -49,6 +49,17 @@ export default async function BoardPage({ params }: Props) {
     ...board.members.map((m) => m.user),
   ]
 
+  const serializedBoard = {
+    ...board,
+    columns: board.columns.map((col) => ({
+      ...col,
+      cards: col.cards.map((card) => ({
+        ...card,
+        dueDate: card.dueDate?.toISOString() ?? null,
+      })),
+    })),
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-800 to-indigo-900 flex flex-col">
       <header className="px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between text-white border-b border-white/10 gap-3 flex-wrap">
@@ -74,7 +85,7 @@ export default async function BoardPage({ params }: Props) {
       </header>
 
       <div className="flex-1 overflow-x-auto p-3 sm:p-6">
-        <KanbanBoard board={board} boardMembers={boardMembers} />
+        <KanbanBoard board={serializedBoard} boardMembers={boardMembers} />
       </div>
     </div>
   )
