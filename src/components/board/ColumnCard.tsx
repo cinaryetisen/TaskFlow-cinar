@@ -8,19 +8,32 @@ import CardItem from './CardItem'
 import AddCardForm from './AddCardForm'
 import { deleteColumn, updateColumnTitle } from '@/app/actions/columns'
 
-type Card = { id: string; title: string; description: string | null; position: string; columnId: string }
+type ChecklistItem = { id: string; text: string; done: boolean; position: string }
+type BoardMember = { id: string; name: string | null; email: string }
+type Card = {
+  id: string
+  title: string
+  description: string | null
+  position: string
+  columnId: string
+  dueDate: string | null
+  assigneeId: string | null
+  assignee: BoardMember | null
+  checklistItems: ChecklistItem[]
+}
 type Column = { id: string; title: string; position: string; boardId: string; cards: Card[] }
 
 type Props = {
   column: Column
   boardId: string
+  boardMembers: BoardMember[]
   overlay?: boolean
   onCardAdded: (card: Card) => void
   onCardDeleted: (cardId: string) => void
   onColumnDeleted: () => void
 }
 
-export default function ColumnCard({ column, boardId, overlay, onCardAdded, onCardDeleted, onColumnDeleted }: Props) {
+export default function ColumnCard({ column, boardId, boardMembers, overlay, onCardAdded, onCardDeleted, onColumnDeleted }: Props) {
   const [editingTitle, setEditingTitle] = useState(false)
   const [title, setTitle] = useState(column.title)
   const [, startTransition] = useTransition()
@@ -56,10 +69,11 @@ export default function ColumnCard({ column, boardId, overlay, onCardAdded, onCa
     <div
       ref={setNodeRef}
       style={overlay ? undefined : style}
-      className={`flex-shrink-0 w-72 bg-slate-100 rounded-xl flex flex-col max-h-[calc(100vh-8rem)] ${overlay ? 'shadow-2xl rotate-2' : ''}`}
+      className={`flex-shrink-0 w-[280px] sm:w-72 bg-slate-100 rounded-xl flex flex-col max-h-[calc(100vh-7rem)] sm:max-h-[calc(100vh-8rem)] ${overlay ? 'shadow-2xl rotate-2' : ''}`}
     >
       <div
         className="flex items-center justify-between px-3 py-2 cursor-grab active:cursor-grabbing"
+        suppressHydrationWarning
         {...attributes}
         {...listeners}
       >
@@ -100,6 +114,7 @@ export default function ColumnCard({ column, boardId, overlay, onCardAdded, onCa
               key={card.id}
               card={card}
               boardId={boardId}
+              boardMembers={boardMembers}
               onDeleted={() => onCardDeleted(card.id)}
             />
           ))}

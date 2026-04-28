@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useState } from 'react'
 import { createColumn } from '@/app/actions/columns'
 
 type Column = { id: string; title: string; position: string; boardId: string }
@@ -8,28 +8,32 @@ type Column = { id: string; title: string; position: string; boardId: string }
 type Props = {
   boardId: string
   onAdded: (col: Column) => void
+  onRealId: (optimisticId: string, realId: string) => void
 }
 
-export default function AddColumnForm({ boardId, onAdded }: Props) {
+export default function AddColumnForm({ boardId, onAdded, onRealId }: Props) {
   const [open, setOpen] = useState(false)
   const [title, setTitle] = useState('')
-  const [pending, startTransition] = useTransition()
+  const [pending, setPending] = useState(false)
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!title.trim()) return
-    const optimistic = { id: crypto.randomUUID(), title: title.trim(), position: 'z', boardId }
-    onAdded(optimistic)
+    if (!title.trim() || pending) return
+    const optimisticId = crypto.randomUUID()
+    onAdded({ id: optimisticId, title: title.trim(), position: 'z', boardId })
     setTitle('')
     setOpen(false)
-    startTransition(() => createColumn(boardId, title.trim()))
+    setPending(true)
+    const real = await createColumn(boardId, title.trim())
+    onRealId(optimisticId, real.id)
+    setPending(false)
   }
 
   if (!open) {
     return (
       <button
         onClick={() => setOpen(true)}
-        className="flex-shrink-0 w-72 h-12 bg-white/10 hover:bg-white/20 text-white/80 hover:text-white rounded-xl text-sm font-medium transition-colors border border-white/10"
+        className="flex-shrink-0 w-[280px] sm:w-72 h-12 bg-white/10 hover:bg-white/20 text-white/80 hover:text-white rounded-xl text-sm font-medium transition-colors border border-white/10"
       >
         + Add column
       </button>
@@ -37,7 +41,7 @@ export default function AddColumnForm({ boardId, onAdded }: Props) {
   }
 
   return (
-    <div className="flex-shrink-0 w-72 bg-slate-100 rounded-xl p-3">
+    <div className="flex-shrink-0 w-[280px] sm:w-72 bg-slate-100 rounded-xl p-3">
       <form onSubmit={handleSubmit} className="space-y-2">
         <input
           autoFocus

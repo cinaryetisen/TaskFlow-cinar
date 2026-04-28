@@ -17,8 +17,9 @@ async function nextPosition(boardId: string): Promise<string> {
 export async function createColumn(boardId: string, title: string) {
   await verifySession()
   const position = await nextPosition(boardId)
-  await prisma.column.create({ data: { title, position, boardId } })
+  const column = await prisma.column.create({ data: { title, position, boardId } })
   revalidatePath(`/board/${boardId}`)
+  return column
 }
 
 export async function updateColumnTitle(columnId: string, boardId: string, title: string) {

@@ -25,11 +25,23 @@ import AddColumnForm from './AddColumnForm'
 import { moveCard } from '@/app/actions/cards'
 import { reorderColumns } from '@/app/actions/columns'
 
-type Card = { id: string; title: string; description: string | null; position: string; columnId: string }
+type ChecklistItem = { id: string; text: string; done: boolean; position: string }
+type BoardMember = { id: string; name: string | null; email: string }
+type Card = {
+  id: string
+  title: string
+  description: string | null
+  position: string
+  columnId: string
+  dueDate: string | null
+  assigneeId: string | null
+  assignee: BoardMember | null
+  checklistItems: ChecklistItem[]
+}
 type Column = { id: string; title: string; position: string; boardId: string; cards: Card[] }
 type Board = { id: string; title: string; columns: Column[] }
 
-export default function KanbanBoard({ board }: { board: Board }) {
+export default function KanbanBoard({ board, boardMembers }: { board: Board; boardMembers: BoardMember[] }) {
   const [columns, setColumns] = useState<Column[]>(board.columns)
   const [activeCard, setActiveCard] = useState<Card | null>(null)
   const [activeColumn, setActiveColumn] = useState<Column | null>(null)
@@ -121,13 +133,14 @@ export default function KanbanBoard({ board }: { board: Board }) {
       onDragOver={onDragOver}
       onDragEnd={onDragEnd}
     >
-      <div className="flex gap-4 items-start h-full">
+      <div className="flex gap-3 sm:gap-4 items-start h-full">
         <SortableContext items={columnIds} strategy={horizontalListSortingStrategy}>
           {columns.map((col) => (
             <ColumnCard
               key={col.id}
               column={col}
               boardId={board.id}
+              boardMembers={boardMembers}
               onCardAdded={(card) =>
                 setColumns((prev) =>
                   prev.map((c) => (c.id === col.id ? { ...c, cards: [...c.cards, card] } : c))
@@ -148,17 +161,23 @@ export default function KanbanBoard({ board }: { board: Board }) {
         <AddColumnForm
           boardId={board.id}
           onAdded={(col) => setColumns((prev) => [...prev, { ...col, cards: [] }])}
+          onRealId={(optimisticId, realId) =>
+            setColumns((prev) =>
+              prev.map((c) => (c.id === optimisticId ? { ...c, id: realId } : c))
+            )
+          }
         />
       </div>
 
       {typeof document !== 'undefined' &&
         createPortal(
           <DragOverlay>
-            {activeCard && <CardItem card={activeCard} boardId={board.id} overlay />}
+            {activeCard && <CardItem card={activeCard} boardId={board.id} boardMembers={boardMembers} overlay />}
             {activeColumn && (
               <ColumnCard
                 column={activeColumn}
                 boardId={board.id}
+                boardMembers={boardMembers}
                 overlay
                 onCardAdded={() => {}}
                 onCardDeleted={() => {}}

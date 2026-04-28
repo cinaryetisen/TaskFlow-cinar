@@ -16,14 +16,15 @@ async function nextCardPosition(columnId: string): Promise<string> {
 export async function createCard(columnId: string, boardId: string, title: string) {
   await verifySession()
   const position = await nextCardPosition(columnId)
-  await prisma.card.create({ data: { title, position, columnId } })
+  const card = await prisma.card.create({ data: { title, position, columnId } })
   revalidatePath(`/board/${boardId}`)
+  return card
 }
 
 export async function updateCard(
   cardId: string,
   boardId: string,
-  data: { title?: string; description?: string }
+  data: { title?: string; description?: string; dueDate?: Date | null; assigneeId?: string | null }
 ) {
   await verifySession()
   await prisma.card.update({ where: { id: cardId }, data })
