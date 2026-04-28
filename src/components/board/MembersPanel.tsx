@@ -30,7 +30,7 @@ export default function MembersPanel({ boardId, initialMembers, isOwner, current
 
   function handleRemove(targetUserId: string) {
     setMembers((prev) => prev.filter((m) => m.user.id !== targetUserId))
-    startTransition(() => removeMember(boardId, targetUserId))
+    startTransition(() => { removeMember(boardId, targetUserId) })
   }
 
   const totalCount = members.length + 1
